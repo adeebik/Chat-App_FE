@@ -1,62 +1,94 @@
 import { useEffect, useRef, useState } from "react";
+import Room from "./room";
+import Landing from "./Landing";
+import { Route, Routes, useNavigate } from "react-router-dom";
 
 function App() {
-  const [socket, setSocket] = useState();
-  const inputref = useRef<HTMLInputElement>(null);
-
-  function sendMessage() {
-    if (!socket) {
-      return null;
-    }
-    socket.send(inputref.current?.value);
-  }
+  const socket = useRef<WebSocket | null>(null);
+  const navigate = useNavigate();
+  const [socketWorking, setsocketWorking] = useState(false);
+  const [name, setName] = useState("");
+  const [roomId, setRoomId] = useState("");
+  const [messages, setMessages] = useState<any[]>([]);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8000");
-    setSocket(ws);
+    const ws = new WebSocket("ws://localhost:8080");
+    socket.current = ws;
+
+    ws.onopen = () => {
+      console.log("Connected to server");
+      setsocketWorking(true);
+    };
 
     ws.onmessage = (e) => {
-      alert(e.data);
+      const receivedData = JSON.parse(e.data);
+      console.log(receivedData);
+
+      if (receivedData.type === "joined" || receivedData.type === "created") {
+        const { name, roomId } = receivedData.payload;
+        console.log("name and roomId : ", name, roomId);
+        setName(name);
+        setRoomId(roomId.trim());
+        navigate("/chatroom");
+      }
+
+      if (receivedData.type === "system" || receivedData.type === "chat") {
+        setMessages((prev) => [...prev, { ...receivedData, isOwn: false }]);
+      }
+
+      if (receivedData.type === "error") {
+        console.error("Server error:", receivedData.text);
+        alert(receivedData.text);
+        window.location.reload();
+      }
     };
-    
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+      setsocketWorking(false);
+    };
+
+    ws.onclose = () => {
+      console.log("Disconnected from server");
+      setsocketWorking(false);
+    };
+
+    return () => {
+      ws.close();
+    };
   }, []);
 
+  const leaveRoom = () => {
+    if (socket.current) {
+      socket.current.close();
+    }
+    navigate("/");
+    window.location.reload();
+  };
+
   return (
-    <div className="h-screen w-screen bg-black flex items-center justify-center p-5">
-      <div className="max-h-160 h-full max-w-130 w-full  border border-zinc-400 rounded-xl overflow-hidden flex flex-col justify-between  ">
-        <div className="msgBox h-full flex flex-col w-full p-3">
-          <div className="mymsg self-end my-1 bg-blue-600 text-white px-3 py-1 rounded-l-xl rounded-t-xl ">
-            <div className="mainTxt text-md">
-              Hi there, wyd?
-            </div>
-            <div className="mt-1 minTxt justify-self-end text-zinc-200 text-xs ">
-              adeeb 
-            </div>
-          </div>
-          <div className="yourmsg my-1 bg-green-600 text-white px-3 py-1 rounded-t-xl rounded-r-xl w-fit">
-            <div className="mainTxt text-md">
-              nothing wby?
-            </div>
-            <div className="mt-1 minTxt text-zinc-200 text-xs ">
-              hashim 
-            </div>
-          </div>
-        </div>
-        <div className="textBox p-5 gap-3 w-full flex">
-          <input
-            ref={inputref}
-            className="px-3 w-full border rounded-lg text-white"
-            type="text"
-            placeholder="Write Your Message ..."
-          />
-          <button
-            className="hover:bg-blue-700 cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg"
-            onClick={sendMessage}
-          >
-            Send
-          </button>
-        </div>
-      </div>
+    <div className="h-screen w-screen bg-black flex-col flex items-center justify-center p-5">
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Landing wsocket={socket.current} socketWorking={socketWorking} />
+          }
+        />
+        <Route
+          path="/chatroom"
+          element={
+            <Room
+              wsocket={socket.current}
+              setMessages={setMessages}
+              messages={messages}
+              userName={name}
+              roomId={roomId}
+              exit={leaveRoom}
+            />
+          }
+        />
+      </Routes>
     </div>
   );
 }
