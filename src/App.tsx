@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import Room from "./room";
+import Room from "./Room";
 import Landing from "./Landing";
 import { Route, Routes, useNavigate } from "react-router-dom";
 
