@@ -12,7 +12,7 @@ function App() {
   const [messages, setMessages] = useState<any[]>([]);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8080");
+    const ws = new WebSocket("https://chat-app-be-nuj2.onrender.com/");
     socket.current = ws;
 
     ws.onopen = () => {
