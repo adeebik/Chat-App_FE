@@ -74,8 +74,11 @@ function Landing({ wsocket, socketWorking }: LandingProps) {
     <>
       <div className="w-full max-w-200 p-5 border border-zinc-600 rounded-xl overflow-hidden flex flex-col shadow-sm gap-5 text-white">
         <div className="textbox flex justify-between">
-          <div className="texts">
-            <h1 className="text-2xl font-bold">Real Time Chat App</h1>
+          <div className="texts  flex flex-col">
+            <div className="logo flex items-center gap-2 ">
+              <img className="h-6 w-6" src="./public/loogo.png" alt="" />
+              <h1 className="text-2xl font-bold">Real Time Chat App</h1>
+            </div>
             <p className="text-sm text-zinc-400">
               temporary room that expires after all users exit
             </p>
