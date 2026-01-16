@@ -27,12 +27,6 @@ cd Chat-App_FE
 npm install
 ```
 
-### Environment Variables
-
-Create a `.env` file in the root directory:
-
-**Note:** All environment variables in Vite must be prefixed with `VITE_` to be exposed to your application.
-
 ### Running the Application
 
 #### Development Mode
